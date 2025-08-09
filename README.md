@@ -1,19 +1,11 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-//go:build windows
-// +build windows
-
-// print command prints text documents to selected printer.
+```
 package main
 
 import (
 	"fmt"
 	"os"
-	"po/escpos"
 	"strconv"
-
+	"github.com/w6xian/escpos"
 	"github.com/w6xian/printer"
 )
 
@@ -128,3 +120,4 @@ func main() {
 	pr.End()
 	p.EndPage()
 }
+```
