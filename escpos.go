@@ -351,6 +351,7 @@ func (e *Escpos) Barcode(barcode string, format int) {
 // code specifies the data to be printed
 // model specifies the qr code model. false for model 1, true for model 2
 // size specifies the size in dots. It needs to be between 1 and 16
+// QRCode("https://www.baidu.com", true, 8, 2)二维码居中
 func (e *Escpos) QRCode(code string, model bool, size uint8, correctionLevel uint8) (int, error) {
 	if len(code) > 7089 {
 		return 0, fmt.Errorf("the code is too long, it's length should be smaller than 7090")
@@ -447,7 +448,8 @@ func (e *Escpos) InLine(str1, str2 string, opts ...FillOption) (int, error) {
 	opt := newFillOptions(opts...)
 	fontWidth := opt.FontWidth
 	fillWith := opt.FillWith
-	return e.Print(Inline(e.opts.MaxChar, str1, str2, fillWith, fontWidth))
+	position := opt.Position
+	return e.Print(Inline(e.opts.MaxChar, str1, str2, fillWith, fontWidth, int(position)))
 }
 
 func (e *Escpos) FillAround(str1 string, opts ...FillOption) (int, error) {

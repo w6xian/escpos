@@ -82,6 +82,7 @@ type FillOptions struct {
 	FillWith  string
 	FontWidth int
 	Position  int
+	Width     int
 }
 
 type FillOption func(*FillOptions)
@@ -91,6 +92,8 @@ func newFillOptions(opts ...FillOption) *FillOptions {
 		FillWith:  " ",
 		FontWidth: 1,
 		Position:  POSITION_LEFT,
+		Width:     -1, // 没有宽度，根据内容自动调整
+
 	}
 	for _, o := range opts {
 		o(opt)
@@ -113,5 +116,22 @@ func FontWidth(fontWidth int) FillOption {
 func Position(position int) FillOption {
 	return func(o *FillOptions) {
 		o.Position = position
+	}
+}
+
+func Width(width int) FillOption {
+	return func(o *FillOptions) {
+		o.Width = width
+	}
+}
+
+// 单行文本，不换行
+// 宽度为-2时，不换行
+// 宽度为-1时，根据内容自动调整宽度
+const FULL_LINE_WIDTH = -2
+
+func FullLine() FillOption {
+	return func(o *FillOptions) {
+		o.Width = FULL_LINE_WIDTH
 	}
 }

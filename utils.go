@@ -45,7 +45,7 @@ func getStringWidth(str string) int {
  * @param {string} fillWith str1 str2之间的填充字符
  *
  */
-func Inline(maxChar int, str1, str2 string, fillWith string, fontWidth int) string {
+func Inline(maxChar int, str1, str2 string, fillWith string, fontWidth int, pos int) string {
 	lineWidth := maxChar / fontWidth
 	str1Width := getStringWidth(str1)
 	str2Width := getStringWidth(str2)
@@ -57,6 +57,15 @@ func Inline(maxChar int, str1, str2 string, fillWith string, fontWidth int) stri
 	if getStringWidth(str1+fillStr+str2) > lineWidth {
 		return str1 + str2
 	}
+	if pos == POSITION_LEFT {
+		return str1 + str2 + fillStr
+	} else if pos == POSITION_CENTER {
+		leftCount := int(math.Round(float64(fillCount) / 2))
+		// 两侧的填充字符，需要考虑左边需要填充，右边不需要填充的情况
+		fillStr := strings.Repeat(fillWith, leftCount)
+		return str1 + fillStr + str2 + fillStr[0:fillCount-leftCount]
+	}
+
 	return str1 + fillStr + str2
 }
 
@@ -102,7 +111,6 @@ func fillColumn(maxChar int, str string, fillWith string, fontWidth int, pos int
 	// 需要填充的字符数量
 	fillCount := lineWidth - strWidth
 	if pos == POSITION_CENTER {
-
 		// 左侧填充的字符数量
 		leftCount := int(math.Round(float64(fillCount) / 2))
 		// 两侧的填充字符，需要考虑左边需要填充，右边不需要填充的情况

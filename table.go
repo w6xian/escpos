@@ -5,42 +5,44 @@ import (
 	"strings"
 )
 
-type Tr struct {
-	Tds []*Td
+type EscTr struct {
+	Tds []*EscTd
 }
 
-type Header struct {
-	Ths []*Th
+type EscHeader struct {
+	Ths []*EscTh
 }
 
-type Th struct {
+type EscTh struct {
+	Key   string
 	Title string
 	width int
 	opts  *FillOptions
 }
 
-type Td struct {
+type EscTd struct {
+	Key   string
 	Title string
 	width int
 	opts  *FillOptions
 }
 
-type Table struct {
+type EscTable struct {
 	width  int
-	header *Header
-	Trs    []*Tr
+	header *EscHeader
+	Trs    []*EscTr
 }
 
 func Row(tds ...TableColumn) TableRow {
-	return func() *Tr {
-		return newRow(tds...)
+	return func() *EscTr {
+		return newEscRow(tds...)
 	}
 }
 
-func Column(title string, width int, opts ...FillOption) TableColumn {
-	return func() *Td {
+func ColumnData(title string, width int, opts ...FillOption) TableColumn {
+	return func() *EscTd {
 		opt := newFillOptions(opts...)
-		td := &Td{
+		td := &EscTd{
 			Title: title,
 			width: width,
 			opts:  opt,
@@ -49,10 +51,10 @@ func Column(title string, width int, opts ...FillOption) TableColumn {
 	}
 }
 
-func HeaderColumn(title string, width int, opts ...FillOption) TableColumnHeader {
-	return func() *Th {
+func ColumnHeader(title string, width int, opts ...FillOption) TableColumnHeader {
+	return func() *EscTh {
 		opt := newFillOptions(opts...)
-		th := &Th{
+		th := &EscTh{
 			Title: title,
 			width: width,
 			opts:  opt,
@@ -61,8 +63,8 @@ func HeaderColumn(title string, width int, opts ...FillOption) TableColumnHeader
 	}
 }
 
-func newTable(cols ...TableRow) *Table {
-	t := &Table{}
+func newEscTable(cols ...TableRow) *EscTable {
+	t := &EscTable{}
 	for _, c := range cols {
 		tr := c()
 		t.Trs = append(t.Trs, tr)
@@ -70,8 +72,8 @@ func newTable(cols ...TableRow) *Table {
 	return t
 }
 
-func newRow(cols ...TableColumn) *Tr {
-	tr := &Tr{}
+func newEscRow(cols ...TableColumn) *EscTr {
+	tr := &EscTr{}
 	for _, c := range cols {
 		td := c()
 		tr.Tds = append(tr.Tds, td)
@@ -79,8 +81,8 @@ func newRow(cols ...TableColumn) *Tr {
 	return tr
 }
 
-func newHeader(cols ...TableColumnHeader) *Header {
-	tr := &Header{}
+func newEscHeader(cols ...TableColumnHeader) *EscHeader {
+	tr := &EscHeader{}
 	for _, c := range cols {
 		th := c()
 		tr.Ths = append(tr.Ths, th)
@@ -88,7 +90,7 @@ func newHeader(cols ...TableColumnHeader) *Header {
 	return tr
 }
 
-func (t *Table) Print() {
+func (t *EscTable) Print() {
 	// 头
 	for _, th := range t.header.Ths {
 		fmt.Printf("%s", th.Title)
@@ -103,27 +105,27 @@ func (t *Table) Print() {
 	}
 }
 
-func EscTable(header *Header, rows ...TableRow) *Table {
-	t := newTable(rows...)
+func Table(header *EscHeader, rows ...TableRow) *EscTable {
+	t := newEscTable(rows...)
 	t.header = header
 	t.width = len(header.Ths)
 	return t
 }
-func EscRow(cols ...TableColumn) *Tr {
-	t := newRow(cols...)
+func EscRow(cols ...TableColumn) *EscTr {
+	t := newEscRow(cols...)
 	return t
 }
 
-func EscHeader(cols ...TableColumnHeader) *Header {
-	t := newHeader(cols...)
+func Header(cols ...TableColumnHeader) *EscHeader {
+	t := newEscHeader(cols...)
 	return t
 }
 
-type TableColumnHeader func() *Th
-type TableRow func() *Tr
-type TableColumn func() *Td
+type TableColumnHeader func() *EscTh
+type TableRow func() *EscTr
+type TableColumn func() *EscTd
 
-func (e *Escpos) PrintTable(t *Table) {
+func (e *Escpos) PrintTable(t *EscTable) {
 	e.Font(FontA)
 	e.FontAlign(AlignLeft)
 	e.FontSize(1, 1)
@@ -138,8 +140,23 @@ func (e *Escpos) PrintTable(t *Table) {
 	e.Println(fillColumn(e.opts.MaxChar, headerStr, opt.FillWith, opt.FontWidth, opt.Position))
 	for _, tr := range t.Trs {
 		row := []string{}
-		for _, td := range tr.Tds {
-			row = append(row, fillColumn(td.width, td.Title, td.opts.FillWith, td.opts.FontWidth, td.opts.Position))
+		trWidth := 0
+		totalWidth := len(tr.Tds)
+		for i, td := range tr.Tds {
+			w := td.width
+			// 一行打印
+			if w == -2 || w == e.opts.MaxChar {
+				w = e.opts.MaxChar
+			}
+			if w < e.opts.MaxChar {
+				// 最后一列，宽度自适应
+				if i == totalWidth-1 {
+					w = e.opts.MaxChar - trWidth
+				} else {
+					trWidth += w
+				}
+			}
+			row = append(row, fillColumn(w, td.Title, td.opts.FillWith, td.opts.FontWidth, td.opts.Position))
 		}
 		rowStr := strings.Join(row, "")
 		e.Println(fillColumn(e.opts.MaxChar, rowStr, opt.FillWith, opt.FontWidth, opt.Position))
