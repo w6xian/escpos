@@ -458,3 +458,10 @@ func (e *Escpos) FillAround(str1 string, opts ...FillOption) (int, error) {
 	fillWith := opt.FillWith
 	return e.Print(fillAround(e.opts.MaxChar, str1, fillWith, fontWidth))
 }
+
+func (e *Escpos) Divider(opts ...FillOption) (int, error) {
+	opt := newFillOptions(opts...)
+	fontWidth := opt.FontWidth
+	fillWith := opt.FillWith
+	return e.Print(fillAround(e.opts.MaxChar, fillWith, fillWith, fontWidth))
+}
